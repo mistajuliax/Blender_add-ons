@@ -34,9 +34,14 @@ class HideAllWire(bpy.types.Operator):
 
     def execute(self, context):
         for obj in bpy.data.objects:
-            if (not context.scene.WT_only_selection)  or  (obj.select and context.scene.WT_only_selection and not context.scene.WT_invert)  or  ((context.scene.WT_invert and context.scene.WT_only_selection) and not obj.select):
-                if hasattr(obj,"show_wire"):
-                    obj.show_wire,obj.show_all_edges = False,False
+            if (
+                not context.scene.WT_only_selection
+                or obj.select
+                and not context.scene.WT_invert
+                or context.scene.WT_invert
+                and not obj.select
+            ) and hasattr(obj, "show_wire"):
+                obj.show_wire,obj.show_all_edges = False,False
         return {'FINISHED'}
 
 class DrawOnlyBounds(bpy.types.Operator):
@@ -50,9 +55,14 @@ class DrawOnlyBounds(bpy.types.Operator):
 
     def execute(self, context):
         for obj in bpy.data.objects:
-            if (not context.scene.WT_only_selection)  or  (obj.select and context.scene.WT_only_selection and not context.scene.WT_invert)  or  ((context.scene.WT_invert and context.scene.WT_only_selection) and not obj.select):
-                if hasattr(obj,"draw_type"):
-                    obj.draw_type = 'BOUNDS'                    
+            if (
+                not context.scene.WT_only_selection
+                or obj.select
+                and not context.scene.WT_invert
+                or context.scene.WT_invert
+                and not obj.select
+            ) and hasattr(obj, "draw_type"):
+                obj.draw_type = 'BOUNDS'
         return {'FINISHED'}
     
 class DrawTextured(bpy.types.Operator):
@@ -66,9 +76,14 @@ class DrawTextured(bpy.types.Operator):
 
     def execute(self, context):
         for obj in bpy.data.objects:
-            if (not context.scene.WT_only_selection)  or  (obj.select and context.scene.WT_only_selection and not context.scene.WT_invert)  or  ((context.scene.WT_invert and context.scene.WT_only_selection) and not obj.select):
-                if hasattr(obj,"draw_type"):
-                    obj.draw_type = 'TEXTURED'                   
+            if (
+                not context.scene.WT_only_selection
+                or obj.select
+                and not context.scene.WT_invert
+                or context.scene.WT_invert
+                and not obj.select
+            ) and hasattr(obj, "draw_type"):
+                obj.draw_type = 'TEXTURED'
         return {'FINISHED'}
 
 class DrawWireEdges(bpy.types.Operator):
@@ -82,9 +97,14 @@ class DrawWireEdges(bpy.types.Operator):
 
     def execute(self, context):
         for obj in bpy.data.objects:
-            if (not context.scene.WT_only_selection)  or  (obj.select and context.scene.WT_only_selection and not context.scene.WT_invert)  or  ((context.scene.WT_invert and context.scene.WT_only_selection) and not obj.select):
-                if hasattr(obj,"show_wire"):
-                    obj.show_wire,obj.show_all_edges = True,True
+            if (
+                not context.scene.WT_only_selection
+                or obj.select
+                and not context.scene.WT_invert
+                or context.scene.WT_invert
+                and not obj.select
+            ) and hasattr(obj, "show_wire"):
+                obj.show_wire,obj.show_all_edges = True,True
         return {'FINISHED'}
     
 class DrawOnlyWire(bpy.types.Operator):
@@ -98,9 +118,14 @@ class DrawOnlyWire(bpy.types.Operator):
 
     def execute(self, context):
         for obj in bpy.data.objects:
-            if (not context.scene.WT_only_selection)  or  (obj.select and context.scene.WT_only_selection and not context.scene.WT_invert)  or  ((context.scene.WT_invert and context.scene.WT_only_selection) and not obj.select):
-                if hasattr(obj,"show_wire"):
-                    obj.show_wire,obj.show_all_edges = True,False
+            if (
+                not context.scene.WT_only_selection
+                or obj.select
+                and not context.scene.WT_invert
+                or context.scene.WT_invert
+                and not obj.select
+            ) and hasattr(obj, "show_wire"):
+                obj.show_wire,obj.show_all_edges = True,False
         return {'FINISHED'}
 
 def shading_wire_tools_layout(self,context):

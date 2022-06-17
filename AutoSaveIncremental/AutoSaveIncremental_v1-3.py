@@ -63,9 +63,8 @@ class AutoIncrementalSave(bpy.types.Operator):
                 if not detect_number(file):
                     increment_files.remove(file)
             numbers_index = [ ( index, detect_number(file.split('.blend')[0]) ) for index, file in enumerate(increment_files)]
-            numbers = [index_nb[1] for index_nb in numbers_index] #[detect_number(file.split('.blend')[0]) for file in increment_files]
-            if numbers: # prevent from error with max()
-                str_nb = str( max([int(n[2]) for n in numbers])+1 ) # zfill to always have something like 001, 010, 100
+            if numbers := [index_nb[1] for index_nb in numbers_index]:
+                str_nb = str(max(int(n[2]) for n in numbers) + 1)
 
             if increment_files:
                 d_nb = detect_number(increment_files[-1].split('.blend')[0])
@@ -81,18 +80,28 @@ class AutoIncrementalSave(bpy.types.Operator):
 
             # generating output file name
             if d_nb:
-                if len(increment_files[-1].split('.blend')[0]) < d_nb[1]: # in case last_nb_index is just after filename's max index
-                    output = bpy.path.abspath('//') + dir_name + increment_files[-1].split('.blend')[0][:d_nb[0]] + str_nb + '.blend'
+                output = (
+                    bpy.path.abspath('//')
+                    + dir_name
+                    + increment_files[-1].split('.blend')[0][: d_nb[0]]
+                    + str_nb
+                    + '.blend'
+                    if len(increment_files[-1].split('.blend')[0]) < d_nb[1]
+                    else bpy.path.abspath('//')
+                    + dir_name
+                    + increment_files[-1].split('.blend')[0][: d_nb[0]]
+                    + str_nb
+                    + increment_files[-1].split('.blend')[0][d_nb[1] :]
+                    + '.blend'
+                )
+
+            elif d_nb_filepath:
+                if len(os.path.basename(f_path).split('.blend')[0]) < d_nb_filepath[1]: # in case last_nb_index is just after filename's max index
+                    output = bpy.path.abspath('//') + dir_name + os.path.basename(f_path).split('.blend')[0][:d_nb_filepath[0]] + str_nb + '.blend'
                 else:
-                    output = bpy.path.abspath('//') + dir_name + increment_files[-1].split('.blend')[0][:d_nb[0]] + str_nb + increment_files[-1].split('.blend')[0][d_nb[1]:] + '.blend'
+                    output = bpy.path.abspath('//') + dir_name + os.path.basename(f_path).split('.blend')[0][:d_nb_filepath[0]] + str_nb + os.path.basename(f_path).split('.blend')[0][d_nb_filepath[1]:] + '.blend'
             else:
-                if d_nb_filepath:
-                    if len(os.path.basename(f_path).split('.blend')[0]) < d_nb_filepath[1]: # in case last_nb_index is just after filename's max index
-                        output = bpy.path.abspath('//') + dir_name + os.path.basename(f_path).split('.blend')[0][:d_nb_filepath[0]] + str_nb + '.blend'
-                    else:
-                        output = bpy.path.abspath('//') + dir_name + os.path.basename(f_path).split('.blend')[0][:d_nb_filepath[0]] + str_nb + os.path.basename(f_path).split('.blend')[0][d_nb_filepath[1]:] + '.blend'
-                else:
-                    output = f_path.split(".blend")[0] + '_' + '001' + '.blend'
+                output = f_path.split(".blend")[0] + '_' + '001' + '.blend'
 
             if os.path.isfile(output):
                 self.report({'WARNING'}, "Internal Error: trying to save over an existing file. Cancelled")
@@ -100,7 +109,7 @@ class AutoIncrementalSave(bpy.types.Operator):
                 return {'CANCELLED'}
             bpy.ops.wm.save_mainfile()
             bpy.ops.wm.save_as_mainfile(filepath=output, copy=True)
-            
+
             self.report({'INFO'}, "File: {0} - Created at: {1}".format(output[len(bpy.path.abspath("//")):], output[:len(bpy.path.abspath("//"))]))
         else:
             self.report({'WARNING'}, "Please save a main file")

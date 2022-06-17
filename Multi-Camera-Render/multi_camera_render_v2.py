@@ -45,7 +45,7 @@ class MultiCameraRender(bpy.types.Operator):
         context.scene.MultiOutputDir = bpy.path.abspath(context.scene.MultiOutputDir)
         if not isdir(context.scene.MultiOutputDir):
             context.scene.MultiOutputDir = bpy.path.abspath('//')
-        print('Output directory: ' + context.scene.MultiOutputDir)
+        print(f'Output directory: {context.scene.MultiOutputDir}')
         for obj in context.selected_objects:
             if obj.type == 'CAMERA':
                 count += 1
@@ -59,8 +59,12 @@ class MultiCameraRender(bpy.types.Operator):
                 else:
                     #print('File created: "' + context.scene.MultiOutputFile + str(count) + bpy.context.scene.render.file_extension + '"')
                     render.save_render(context.scene.MultiOutputDir + context.scene.MultiOutputFile + str(count) + bpy.context.scene.render.file_extension)
-        
-        self.report({'INFO'}, str(count) + " files created at: " + context.scene.MultiOutputDir)
+
+        self.report(
+            {'INFO'},
+            f"{str(count)} files created at: {context.scene.MultiOutputDir}",
+        )
+
         context.area.type = previous
         #print()
         return {'FINISHED'}

@@ -70,7 +70,9 @@ class OverrideSetup(bpy.types.Operator):
     def poll(cls, context):
         if context.scene.OW_exclude_type == 'group' and not context.scene.OW_group:
             return False
-        if context.scene.OW_exclude_type == 'layer' and not True in [i for i in context.scene.override_layer]:
+        if context.scene.OW_exclude_type == 'layer' and True not in list(
+            context.scene.override_layer
+        ):
             return False
         return context.scene.OW_material
     
@@ -79,7 +81,7 @@ class OverrideSetup(bpy.types.Operator):
         bpy.ops.view3d.display_override()
         for obj in bpy.data.objects:
             if (obj.select == True)*context.scene.OW_only_selected or not context.scene.OW_only_selected:
-                if not obj.data.name in self.l_mesh:
+                if obj.data.name not in self.l_mesh:
                     self.l_mesh.append(obj.data.name)
                 else:
                     continue
@@ -88,7 +90,10 @@ class OverrideSetup(bpy.types.Operator):
                     obj.data.materials.append(new_mat)
                 elif len(obj.material_slots):
                     if context.scene.OW_exclude_type == 'index':
-                        if not obj.material_slots[0].material.pass_index == context.scene.OW_pass_index:
+                        if (
+                            obj.material_slots[0].material.pass_index
+                            != context.scene.OW_pass_index
+                        ):
                             self._save_mat(obj)
                             self._change_mat(context,obj)
                             obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
@@ -98,7 +103,14 @@ class OverrideSetup(bpy.types.Operator):
                             self._change_mat(context,obj)
                             obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
                     elif context.scene.OW_exclude_type == 'layer':
-                        if not (True in [(context.scene.override_layer[index])*(context.scene.override_layer[index]==obj.layers[index]) for index in range(len(obj.layers))]):
+                        if True not in [
+                            (context.scene.override_layer[index])
+                            * (
+                                context.scene.override_layer[index]
+                                == obj.layers[index]
+                            )
+                            for index in range(len(obj.layers))
+                        ]:
                             self._save_mat(obj)
                             self._change_mat(context,obj)
                             obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
@@ -133,8 +145,8 @@ class OverrideRestore(bpy.types.Operator):
             else:
                 print('Failed to restore material for object:', obj.name)
                 print(bpy.data.objects.find(obj.name), bpy.data.objects[obj.name])
-        bpy.types.RENDER_OT_override_setup.l_m = list()
-        bpy.types.RENDER_OT_override_setup.l_mesh = list()
+        bpy.types.RENDER_OT_override_setup.l_m = []
+        bpy.types.RENDER_OT_override_setup.l_mesh = []
         return {'FINISHED'}
 
 
@@ -182,9 +194,12 @@ def stop_on_save(dummy):
 
 @persistent
 def mat_override_pre_render(dummy):
-    if not bpy.types.RENDER_OT_override_setup.l_m:
-        if bpy.context.scene.OW_start_on_render and bpy.ops.render.override_setup.poll():
-            bpy.ops.render.override_setup()
+    if (
+        not bpy.types.RENDER_OT_override_setup.l_m
+        and bpy.context.scene.OW_start_on_render
+        and bpy.ops.render.override_setup.poll()
+    ):
+        bpy.ops.render.override_setup()
 @persistent
 def mat_override_post_render(dummy):
     if bpy.context.scene.OW_start_on_render:

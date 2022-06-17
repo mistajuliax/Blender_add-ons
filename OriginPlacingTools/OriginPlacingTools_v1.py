@@ -44,9 +44,7 @@ class PlaceOrigin(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.active_object:
-            return context.active_object.type == "MESH"
-        return False
+        return context.active_object.type == "MESH" if context.active_object else False
     
     def execute(self, context):
         obj = context.active_object
@@ -54,22 +52,32 @@ class PlaceOrigin(bpy.types.Operator):
         bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
         bpy.ops.object.mode_set(mode=current_mode)
-        
+
         bbox = obj.bound_box
         l = [None]*8
         l[0],l[1],l[2],l[3],l[4],l[5],l[6],l[7] = bbox[0],bbox[3],bbox[1],bbox[2],bbox[4],bbox[7],bbox[5],bbox[6]
-        if context.scene.OriginTools_orientation_mode == "1":
-            if int(context.scene.OriginTools_orientation_method):
-                vert_number = int(context.scene.OriginTools_orientation_list)
-            else:
-                vert_number = int(context.scene.OriginTools_orientation_x)*4 + int(context.scene.OriginTools_orientation_y)*1 + int(context.scene.OriginTools_orientation_z)*2
-        elif context.scene.OriginTools_orientation_mode == "0":
+        if context.scene.OriginTools_orientation_mode == "0":
             axis = int(context.scene.OriginTools_orientation_axis)
             side = int(context.scene.OriginTools_orientation_side)
-            vert_number = int(axis) + (side and not axis)*4 - (not side and axis==1)*1 - (not side and axis==2)*2
-        
+            vert_number = (
+                axis
+                + (side and not axis) * 4
+                - (not side and axis == 1) * 1
+                - (not side and axis == 2) * 2
+            )
+
+
+        elif context.scene.OriginTools_orientation_mode == "1":
+            vert_number = (
+                int(context.scene.OriginTools_orientation_list)
+                if int(context.scene.OriginTools_orientation_method)
+                else int(context.scene.OriginTools_orientation_x) * 4
+                + int(context.scene.OriginTools_orientation_y) * 1
+                + int(context.scene.OriginTools_orientation_z) * 2
+            )
+
         x1,y1,z1 = obj.location[0],obj.location[1],obj.location[2]
-        
+
         if context.scene.OriginTools_orientation_mode == "1":
             obj.location[0],obj.location[1],obj.location[2] = l[vert_number][0] + obj.location[0],l[vert_number][1] + obj.location[1],l[vert_number][2] + obj.location[2]
         elif context.scene.OriginTools_orientation_mode == "2":
@@ -77,18 +85,18 @@ class PlaceOrigin(bpy.types.Operator):
         else:
             k = [0,0,0]
             count = 0
-            for j in range(0,3):
+            for j in range(3):
                 for i in context.object.bound_box:
                     count += i[j]
                 k[j] = count/8
-            for count in range(0,3):
+            for count in range(3):
                 if count == axis:
                     obj.location[axis] = l[vert_number][axis] + obj.location[axis]
                     continue
                 obj.location[count] = k[count] + obj.location[count]
-                
+
         x2,y2,z2 = obj.location[0],obj.location[1],obj.location[2]
-        
+
         for vert in obj.data.vertices:
             vert.co[0] = vert.co[0] - (x2-x1)
             vert.co[1] = vert.co[1] - (y2-y1)
@@ -96,9 +104,9 @@ class PlaceOrigin(bpy.types.Operator):
         return {'FINISHED'}
 
     def cursor_2_origin_loc(self,context):
+        distance = 0
+        count = 0
         if context.scene.OriginTools_cursor_mode == '0':
-            distance = 0
-            count = 0
             for vert in context.object.data.vertices:
                 d_vector = context.scene.cursor_location-(vert.co + context.object.location)
                 d = sqrt(d_vector[0]**2+d_vector[1]**2+d_vector[2]**2)
@@ -108,8 +116,6 @@ class PlaceOrigin(bpy.types.Operator):
                 count =+ 1
             return closest_vert.co
         else:
-            distance = 0
-            count = 0
             for corner in context.object.bound_box:
                 d_vector = context.scene.cursor_location-(Vector((corner[0],corner[1],corner[2])) + context.object.location)
                 d = sqrt(d_vector[0]**2+d_vector[1]**2+d_vector[2]**2)
@@ -133,7 +139,7 @@ class OriginTools(bpy.types.Panel):
         split= layout.split(percentage=.3)
         split.label(text="Basic:")
         split.operator_menu_enum("object.origin_set", "type") # Blender default tool
-        
+
         layout.operator("object.place_origin")
         if context.scene.OriginTools_show_param:
             layout.prop(context.scene, "OriginTools_show_param", text="Hide parameters", icon="TRIA_DOWN")

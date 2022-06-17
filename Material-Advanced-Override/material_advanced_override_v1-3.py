@@ -115,11 +115,13 @@ class OverrideSetup(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
-        if not bpy.context.scene.render.engine == 'CYCLES':
+        if bpy.context.scene.render.engine != 'CYCLES':
             return False
         if context.scene.OW_exclude_type == 'group' and not context.scene.OW_group:
             return False
-        if context.scene.OW_exclude_type == 'layer' and not True in [i for i in context.scene.override_layer]:
+        if context.scene.OW_exclude_type == 'layer' and True not in list(
+            context.scene.override_layer
+        ):
             return False
         return context.scene.OW_material
     
@@ -129,7 +131,7 @@ class OverrideSetup(bpy.types.Operator):
             if (obj.select == True)*context.scene.OW_only_selected or not context.scene.OW_only_selected:
                 if not hasattr(obj.data,'name'): # for empty, camera, lamp
                     continue
-                if not obj.data.name in self.l_mesh: # test mesh insteed of object -> in case of instancing, avoid duplicate 
+                if obj.data.name not in self.l_mesh: # test mesh insteed of object -> in case of instancing, avoid duplicate 
                     self.l_mesh.append(obj.data.name)
                 else:
                     continue
@@ -139,35 +141,42 @@ class OverrideSetup(bpy.types.Operator):
                     obj.data.materials.append(new_mat)
                 elif len(obj.material_slots):
                     if context.scene.OW_exclude_type == 'index':
-                        if not obj.material_slots[0].material.pass_index == context.scene.OW_pass_index:
+                        if (
+                            obj.material_slots[0].material.pass_index
+                            != context.scene.OW_pass_index
+                        ):
                             self._save_mat(obj)
                             self._change_mat(context,obj)
                             obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
-                        else:
-                            if context.scene.OW_vis_hide_camera:
-                                self.l_hidden.append( (obj,obj.cycles_visibility.camera) )
-                                obj.cycles_visibility.camera = False
+                        elif context.scene.OW_vis_hide_camera:
+                            self.l_hidden.append( (obj,obj.cycles_visibility.camera) )
+                            obj.cycles_visibility.camera = False
 
                     elif context.scene.OW_exclude_type == 'group' and context.scene.OW_group:
                         if obj.name in [g_obj.name for g_obj in bpy.data.groups[context.scene.OW_group].objects]:
                             self._save_mat(obj)
                             self._change_mat(context,obj)
                             obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
-                        else:
-                            if context.scene.OW_vis_hide_camera:
-                                self.l_hidden.append( (obj,obj.cycles_visibility.camera) )
-                                obj.cycles_visibility.camera = False
+                        elif context.scene.OW_vis_hide_camera:
+                            self.l_hidden.append( (obj,obj.cycles_visibility.camera) )
+                            obj.cycles_visibility.camera = False
 
                     elif context.scene.OW_exclude_type == 'layer':
-                        if not (True in [(context.scene.override_layer[index])*(context.scene.override_layer[index]==obj.layers[index]) for index in range(len(obj.layers))]):
+                        if True not in [
+                            (context.scene.override_layer[index])
+                            * (
+                                context.scene.override_layer[index]
+                                == obj.layers[index]
+                            )
+                            for index in range(len(obj.layers))
+                        ]:
                             self._save_mat(obj)
                             self._change_mat(context,obj)
                             obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
-                        else:
-                            if context.scene.OW_vis_hide_camera:
-                                self.l_hidden.append( (obj,obj.cycles_visibility.camera) )
-                                obj.cycles_visibility.camera = False
-        
+                        elif context.scene.OW_vis_hide_camera:
+                            self.l_hidden.append( (obj,obj.cycles_visibility.camera) )
+                            obj.cycles_visibility.camera = False
+
         context.scene.OW_display_override = True
         bpy.ops.view3d.display_override()
         return {'FINISHED'}
@@ -199,15 +208,15 @@ class OverrideRestore(bpy.types.Operator):
                 for slot, material in mat_data:
                     slot.material = material
             else:
-                self.report({'WARNING'}, 'Failed to restore material for object: ' + obj.name)
+                self.report({'WARNING'}, f'Failed to restore material for object: {obj.name}')
 
         for data in bpy.types.RENDER_OT_override_setup.l_hidden:
             obj,cam_visibility = data
             obj.cycles_visibility.camera = cam_visibility
 
-        bpy.types.RENDER_OT_override_setup.l_mat = list()
-        bpy.types.RENDER_OT_override_setup.l_mesh = list()
-        bpy.types.RENDER_OT_override_setup.l_hidden = list()
+        bpy.types.RENDER_OT_override_setup.l_mat = []
+        bpy.types.RENDER_OT_override_setup.l_mesh = []
+        bpy.types.RENDER_OT_override_setup.l_hidden = []
         return {'FINISHED'}
 
 ############
@@ -220,9 +229,12 @@ def stop_on_save(dummy):
 
 @persistent
 def mat_override_pre_render(dummy):
-    if not bpy.types.RENDER_OT_override_setup.l_mat:
-        if bpy.context.scene.OW_start_on_render and bpy.ops.render.override_setup.poll():
-            bpy.ops.render.override_setup()
+    if (
+        not bpy.types.RENDER_OT_override_setup.l_mat
+        and bpy.context.scene.OW_start_on_render
+        and bpy.ops.render.override_setup.poll()
+    ):
+        bpy.ops.render.override_setup()
 @persistent
 def mat_override_post_render(dummy):
     if bpy.context.scene.OW_start_on_render:
@@ -230,9 +242,11 @@ def mat_override_post_render(dummy):
 
 @persistent
 def mat_override_stop_on_load(dummy):
-    if hasattr(bpy.types, 'RENDER_OT_override_setup'): # as it is persistent, need to be sure the add-on is active
-        if bpy.types.RENDER_OT_override_setup.l_mesh: 
-            bpy.ops.render.override_restore()     
+    if (
+        hasattr(bpy.types, 'RENDER_OT_override_setup')
+        and bpy.types.RENDER_OT_override_setup.l_mesh
+    ):
+        bpy.ops.render.override_restore()     
 
 ##############
 

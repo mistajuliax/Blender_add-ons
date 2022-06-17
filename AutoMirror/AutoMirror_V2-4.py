@@ -121,7 +121,7 @@ class AutoMirror(bpy.types.Operator):
             Z = 1
 
         current_mode = bpy.context.object.mode # Save the current mode
-        
+
         if bpy.context.object.mode != "EDIT":
             bpy.ops.object.mode_set(mode="EDIT") # Go to edit mode
         bpy.ops.mesh.select_all(action='SELECT') # Select all the vertices
@@ -130,14 +130,14 @@ class AutoMirror(bpy.types.Operator):
         else:
             orientation = -1
         cut_normal = self.get_local_axis_vector(context, X, Y, Z, orientation)
-            
+
         bpy.ops.mesh.bisect(plane_co=(bpy.context.object.location[0], bpy.context.object.location[1], bpy.context.object.location[2]), plane_no=cut_normal, use_fill= False, clear_inner= bpy.context.scene.AutoMirror_cut, clear_outer= 0, threshold= bpy.context.scene.AutoMirror_threshold) # Cut the mesh
-        
+
         bpy.ops.object.align_vertices() # Use to align the vertices on the origin, needed by the "threshold"
-        
+
         if not bpy.context.scene.AutoMirror_toggle_edit:
             bpy.ops.object.mode_set(mode=current_mode) # Reload previous mode
-        
+
         if bpy.context.scene.AutoMirror_cut:
             bpy.ops.object.modifier_add(type='MIRROR') # Add a mirror modifier
             bpy.context.object.modifiers[-1].use_x = X # Choose the axis to use, based on the cut's axis
@@ -152,7 +152,7 @@ class AutoMirror(bpy.types.Operator):
                     bpy.ops.object.mode_set(mode='EDIT')
                 else:
                     bpy.ops.object.mode_set(mode=current_mode)
-        
+
         return {'FINISHED'}
 
 #################### Panel

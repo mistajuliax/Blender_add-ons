@@ -43,12 +43,12 @@ class PreciseRenderBorderAdjust(bpy.types.Panel):
         layout = self.layout
 
         scene = context.scene
-        
+
         if not scene.render.use_border:
             sub = layout.split(percentage=0.7)
             sub.label(icon="ERROR", text="Border Render not activated:")
             sub.prop(scene.render, "use_border")
-        
+
         sub = layout.column()
         row = sub.row()
         row.label(text="")
@@ -61,11 +61,11 @@ class PreciseRenderBorderAdjust(bpy.types.Panel):
         row.label(text="")
         row.prop(scene.render, "border_min_y", text="Min", slider=True)
         row.label(text="")
-        
+
         row = layout.row()
         row.label(text="Convert values to pixels:")
         row.operator("render.bordertopixels", text="Border -> Pixels")
-        
+
         layout.label(text="Pixels position X:")
         row = layout.row(align=True)
         row.prop(scene, "x_min_pixels", text="Min")
@@ -74,7 +74,7 @@ class PreciseRenderBorderAdjust(bpy.types.Panel):
         row = layout.row(align=True)
         row.prop(scene, "y_min_pixels", text="Min")
         row.prop(scene, "y_max_pixels", text="Max")
-        
+
         layout.label(icon="INFO", text="Don't forget to apply pixels values")
         row = layout.row()
         row.operator("render.pixelstoborder", text="Pixels -> Border")
@@ -90,15 +90,15 @@ class PixelsToBorder(bpy.types.Operator):
 
     def execute(self, context):
         C = bpy.context
-    
+
         X = C.scene.render.resolution_x
         Y = C.scene.render.resolution_y
-        
+
         C.scene.render.border_min_x = C.scene.x_min_pixels / X
         C.scene.render.border_max_x = C.scene.x_max_pixels / X
         C.scene.render.border_min_y = C.scene.y_min_pixels / Y
         C.scene.render.border_max_y = C.scene.y_max_pixels / Y
-        
+
         if C.scene.x_min_pixels > X:
             C.scene.x_min_pixels = X
         if C.scene.x_max_pixels > X:
@@ -107,7 +107,7 @@ class PixelsToBorder(bpy.types.Operator):
             C.scene.y_min_pixels = Y
         if C.scene.y_max_pixels > Y:
             C.scene.y_max_pixels = Y
-        
+
         return {'FINISHED'}
     
 class BorderToPixels(bpy.types.Operator):
@@ -121,15 +121,15 @@ class BorderToPixels(bpy.types.Operator):
 
     def execute(self, context):
         C = bpy.context
-    
+
         X = C.scene.render.resolution_x
         Y = C.scene.render.resolution_y
-        
+
         C.scene.x_min_pixels = int(C.scene.render.border_min_x * X)
         C.scene.x_max_pixels = int(C.scene.render.border_max_x * X)
         C.scene.y_min_pixels = int(C.scene.render.border_min_y * Y)
         C.scene.y_max_pixels = int(C.scene.render.border_max_y * Y)
-                
+
         return {'FINISHED'}
 
 def register():
@@ -146,13 +146,13 @@ def unregister():
 
 if __name__ == "__main__":
     C = bpy.context
-    
+
     X = C.scene.render.resolution_x
     Y = C.scene.render.resolution_y
-    
+
     C.scene.x_min_pixels = 0
     C.scene.x_max_pixels = X
     C.scene.y_min_pixels = 0
     C.scene.y_max_pixels = Y
-    
+
     register()

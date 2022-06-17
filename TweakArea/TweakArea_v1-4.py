@@ -117,7 +117,7 @@ class TweakArea(bpy.types.Operator):
             bpy.ops.screen.header_toggle_menus()
             bpy.ops.screen.header_toggle_menus()
             return {'FINISHED'}
-        elif event.type == 'RIGHTMOUSE' or event.type == 'ESC':
+        elif event.type in ['RIGHTMOUSE', 'ESC']:
             return {'CANCELLED'}
         else:
             return {'PASS_THROUGH'}
@@ -143,12 +143,12 @@ class SwitchArea(bpy.types.Operator):
     def modal(self, context, event):
         if event.type == 'LEFTMOUSE':
             area = self.detect_area(event.mouse_x, event.mouse_y, context)
-            if not (area is self.invk_area):
+            if area is not self.invk_area:
                 tmp = area.type
                 area.type = self.invk_area.type
                 self.invk_area.type = tmp
             return {'FINISHED'}
-        elif event.type == 'RIGHTMOUSE' or event.type == 'ESC':
+        elif event.type in ['RIGHTMOUSE', 'ESC']:
             return {'CANCELLED'}
         else:
             return {'PASS_THROUGH'}

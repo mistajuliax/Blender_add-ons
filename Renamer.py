@@ -40,14 +40,23 @@ class Rename(bpy.types.Operator):
     def execute(self, context):
         source_name = context.scene.source_name
         new_name = context.scene.new_name
-        
+
         if context.scene.rename_mode == 'objects' and context.scene.only_selection:
             to_rename_list = bpy.data.objects
             for foo in to_rename_list:
                 if source_name in foo.name and foo.select:
                     foo.name = foo.name[:foo.name.index(source_name)] + new_name + foo.name[foo.name.index(source_name)+len(source_name):]
         else:
-            exec('to_rename_list = bpy.data.' + context.scene.rename_mode +'\n' +'for foo in to_rename_list:' +'\n'+ '    if source_name in foo.name:'+'\n'+'        foo.name = foo.name[:foo.name.index(source_name)] + new_name + foo.name[foo.name.index(source_name)+len(source_name):]')
+            exec(
+                f'to_rename_list = bpy.data.{context.scene.rename_mode}'
+                + '\n'
+                + 'for foo in to_rename_list:'
+                + '\n'
+                + '    if source_name in foo.name:'
+                + '\n'
+                + '        foo.name = foo.name[:foo.name.index(source_name)] + new_name + foo.name[foo.name.index(source_name)+len(source_name):]'
+            )
+
         return {'FINISHED'}
 
 class SwitchName(bpy.types.Operator):

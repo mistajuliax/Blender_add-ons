@@ -44,20 +44,32 @@ class OverwriteSetup(bpy.types.Operator):
     
     def execute(self, context):
         for obj in bpy.data.objects:
-            if (obj.select == True)*context.scene.OW_only_selected or not context.scene.OW_only_selected:
-                if len(obj.material_slots):
-                    if context.scene.OW_exclude_type == 'index':
-                        if not obj.material_slots[0].material.pass_index == context.scene.OW_pass_index:
-                            self.l_m.append((obj,obj.material_slots[0].material))
-                            obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
-                    elif context.scene.OW_exclude_type == 'group' and context.scene.OW_group:
-                        if obj.name in [g_obj.name for g_obj in bpy.data.groups[context.scene.OW_group].objects]:
-                            self.l_m.append((obj,obj.material_slots[0].material))
-                            obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
-                    elif context.scene.OW_exclude_type == 'layer':
-                        if not (True in [(context.scene.override_layer[index])*(context.scene.override_layer[index]==obj.layers[index]) for index in range(len(obj.layers))]):
-                            self.l_m.append((obj,obj.material_slots[0].material))
-                            obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
+            if (
+                (obj.select == True) * context.scene.OW_only_selected
+                or not context.scene.OW_only_selected
+            ) and len(obj.material_slots):
+                if context.scene.OW_exclude_type == 'index':
+                    if (
+                        obj.material_slots[0].material.pass_index
+                        != context.scene.OW_pass_index
+                    ):
+                        self.l_m.append((obj,obj.material_slots[0].material))
+                        obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
+                elif context.scene.OW_exclude_type == 'group' and context.scene.OW_group:
+                    if obj.name in [g_obj.name for g_obj in bpy.data.groups[context.scene.OW_group].objects]:
+                        self.l_m.append((obj,obj.material_slots[0].material))
+                        obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
+                elif context.scene.OW_exclude_type == 'layer':
+                    if True not in [
+                        (context.scene.override_layer[index])
+                        * (
+                            context.scene.override_layer[index]
+                            == obj.layers[index]
+                        )
+                        for index in range(len(obj.layers))
+                    ]:
+                        self.l_m.append((obj,obj.material_slots[0].material))
+                        obj.material_slots[0].material = bpy.data.materials[context.scene.OW_material]
         return {'FINISHED'}
 
 class OverwriteRestore(bpy.types.Operator):

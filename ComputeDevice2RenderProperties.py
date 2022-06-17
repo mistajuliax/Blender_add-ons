@@ -30,11 +30,13 @@ def ChooseCG(self, context):
     if bpy.context.scene.render.engine == 'CYCLES':
         system = context.user_preferences.system
         layout = self.layout
-        if hasattr(system, "compute_device_type"):
-            if system.compute_device_type == 'CUDA':
-                row = layout.split(percentage=0.332)
-                row.label(text="CG Device:")
-                row.prop(system, "compute_device", text="")
+        if (
+            hasattr(system, "compute_device_type")
+            and system.compute_device_type == 'CUDA'
+        ):
+            row = layout.split(percentage=0.332)
+            row.label(text="CG Device:")
+            row.prop(system, "compute_device", text="")
 
 # Fonction called by BLender on add-on start
 def register():

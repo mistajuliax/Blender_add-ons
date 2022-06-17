@@ -69,7 +69,7 @@ class TweakArea(bpy.types.Operator):
             bpy.ops.screen.header_toggle_menus()
             bpy.ops.screen.header_toggle_menus()
             return {'FINISHED'}
-        if event.type == 'RIGHTMOUSE' or event.type == 'ESC':
+        if event.type in ['RIGHTMOUSE', 'ESC']:
             return {'CANCELLED'}
         return {'RUNNING_MODAL'}
 

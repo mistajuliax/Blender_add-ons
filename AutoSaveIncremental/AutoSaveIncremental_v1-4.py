@@ -30,7 +30,7 @@ from bpy.props import IntProperty, FloatProperty, StringProperty, BoolProperty
 
 def rp_d(path): # realpath for directories
     path = os.path.realpath(path)
-    if not path[-1] == os.path.sep:
+    if path[-1] != os.path.sep:
         path += os.path.sep
     return path
 
@@ -69,7 +69,7 @@ class AutoIncrementalSave(bpy.types.Operator):
 
     def execute(self, context):
         sep = os.path.sep
-        
+
         if bpy.data.filepath:
             dir_name = rp_d(context.user_preferences.addons[__name__].preferences.dir_path)
             f_path = os.path.dirname(bpy.data.filepath) + dir_name + bpy.path.basename(bpy.data.filepath)
@@ -81,9 +81,8 @@ class AutoIncrementalSave(bpy.types.Operator):
                 if not detect_number(file):
                     increment_files.remove(file)
             numbers_index = [ ( index, detect_number(file.split('.blend')[0]) ) for index, file in enumerate(increment_files)]
-            numbers = [index_nb[1] for index_nb in numbers_index] #[detect_number(file.split('.blend')[0]) for file in increment_files]
-            if numbers: # prevent from error with max()
-                str_nb = str( max([int(n[2]) for n in numbers])+1 ) # zfill to always have something like 001, 010, 100
+            if numbers := [index_nb[1] for index_nb in numbers_index]:
+                str_nb = str(max(int(n[2]) for n in numbers) + 1)
 
             if increment_files:
                 d_nb = detect_number(increment_files[-1].split('.blend')[0])
@@ -98,18 +97,28 @@ class AutoIncrementalSave(bpy.types.Operator):
                     str_nb = str(int(d_nb_filepath[2]) + 1).zfill(len(d_nb_filepath[2]))
             # generating output file name
             if d_nb:
-                if len(increment_files[-1].split('.blend')[0]) < d_nb[1]: # in case last_nb_index is just after filename's max index
-                    output = bpy.path.abspath("//") + dir_name + increment_files[-1].split('.blend')[0][:d_nb[0]] + str_nb + '.blend'
+                output = (
+                    bpy.path.abspath("//")
+                    + dir_name
+                    + increment_files[-1].split('.blend')[0][: d_nb[0]]
+                    + str_nb
+                    + '.blend'
+                    if len(increment_files[-1].split('.blend')[0]) < d_nb[1]
+                    else bpy.path.abspath("//")
+                    + dir_name
+                    + increment_files[-1].split('.blend')[0][: d_nb[0]]
+                    + str_nb
+                    + increment_files[-1].split('.blend')[0][d_nb[1] :]
+                    + '.blend'
+                )
+
+            elif d_nb_filepath:
+                if len(os.path.basename(f_path).split('.blend')[0]) < d_nb_filepath[1]: # in case last_nb_index is just after filename's max index
+                    output = bpy.path.abspath("//") + dir_name + os.path.basename(f_path).split('.blend')[0][:d_nb_filepath[0]] + str_nb + '.blend'
                 else:
-                    output = bpy.path.abspath("//") + dir_name + increment_files[-1].split('.blend')[0][:d_nb[0]] + str_nb + increment_files[-1].split('.blend')[0][d_nb[1]:] + '.blend'
+                    output = bpy.path.abspath("//") + dir_name + os.path.basename(f_path).split('.blend')[0][:d_nb_filepath[0]] + str_nb + os.path.basename(f_path).split('.blend')[0][d_nb_filepath[1]:] + '.blend'
             else:
-                if d_nb_filepath:
-                    if len(os.path.basename(f_path).split('.blend')[0]) < d_nb_filepath[1]: # in case last_nb_index is just after filename's max index
-                        output = bpy.path.abspath("//") + dir_name + os.path.basename(f_path).split('.blend')[0][:d_nb_filepath[0]] + str_nb + '.blend'
-                    else:
-                        output = bpy.path.abspath("//") + dir_name + os.path.basename(f_path).split('.blend')[0][:d_nb_filepath[0]] + str_nb + os.path.basename(f_path).split('.blend')[0][d_nb_filepath[1]:] + '.blend'
-                else:
-                    output = rp_f(f_path.split(".blend")[0] + '_' + '001' + '.blend')
+                output = rp_f(f_path.split(".blend")[0] + '_' + '001' + '.blend')
             print('1')
             print('Output:', output)
             if os.path.isfile(output):
@@ -123,10 +132,10 @@ class AutoIncrementalSave(bpy.types.Operator):
             bpy.context.user_preferences.addons[__name__].preferences.active_main_save = False
 
             self.report({'INFO'}, "File: {0} - Created at: {1}".format( rp_f(os.path.basename(output)), rp_d(os.path.basename(output)) ))
-            
+
         else:
             self.report({'WARNING'}, "Please save a main file")
-            
+
         return {'FINISHED'}
         ###### PENSER A TESTER AUTRES FICHIERS DU DOSSIER, VOIR SI TROU DANS NUMEROTATION==> WARNING
 
@@ -209,9 +218,13 @@ def stop_on_save(dummy):
             bpy.context.user_preferences.addons[__name__].preferences.stop = True # kill any running instance
 
 def start_after_save(dummy):
-    if not bpy.context.user_preferences.addons[__name__].preferences.active_main_save:
-        if bpy.context.user_preferences.addons[__name__].preferences.active:
-            bpy.ops.file.auto_save_incremental_modal('INVOKE_DEFAULT')
+    if (
+        not bpy.context.user_preferences.addons[
+            __name__
+        ].preferences.active_main_save
+        and bpy.context.user_preferences.addons[__name__].preferences.active
+    ):
+        bpy.ops.file.auto_save_incremental_modal('INVOKE_DEFAULT')
         #else:
         #    bpy.context.user_preferences.addons[__name__].preferences.stop = False
 

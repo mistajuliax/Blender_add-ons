@@ -61,7 +61,7 @@ class FileIncrementalSave(bpy.types.Operator):
 
     def execute(self, context):
         if bpy.data.filepath:
-            dir_name = context.user_preferences.addons[__name__].preferences.dir_path 
+            dir_name = context.user_preferences.addons[__name__].preferences.dir_path
             f_path = os.path.dirname(bpy.data.filepath) + dir_name + bpy.path.basename(bpy.data.filepath)
             #bpy.ops.wm.save_mainfile(filepath=f_path)
 
@@ -70,9 +70,8 @@ class FileIncrementalSave(bpy.types.Operator):
                 if not detect_number(file):
                     increment_files.remove(file)
             numbers_index = [ ( index, detect_number(file.split('.blend')[0]) ) for index, file in enumerate(increment_files)]
-            numbers = [index_nb[1] for index_nb in numbers_index] #[detect_number(file.split('.blend')[0]) for file in increment_files]
-            if numbers: # prevent from error with max()
-                str_nb = str( max([int(n[2]) for n in numbers])+1 ) # zfill to always have something like 001, 010, 100
+            if numbers := [index_nb[1] for index_nb in numbers_index]:
+                str_nb = str(max(int(n[2]) for n in numbers) + 1)
 
             if increment_files:
                 d_nb = detect_number(increment_files[-1].split('.blend')[0])
@@ -109,7 +108,7 @@ class FileIncrementalSave(bpy.types.Operator):
                 return {'CANCELLED'}
             bpy.ops.wm.save_mainfile()
             bpy.ops.wm.save_as_mainfile(filepath=output, copy=True)
-            
+
             self.report({'INFO'}, "File: {0} - Created at: {1}".format(output[len(bpy.path.abspath("//")):], output[:len(bpy.path.abspath("//"))]))
         else:
             self.report({'WARNING'}, "Please save a main file")
